@@ -64,3 +64,66 @@ POSITION_METRICS = {
         }
     },
 }
+
+
+def add_derived_stats(df : pd.DataFrame):
+    df = df.copy()
+    sets = df["sets_played"].replace(0, np.nan)
+    receptions = df["receptions"].replace(0, np.nan)
+    attacks = df["attack_attempts"].replace(0, np.nan)
+    serves = df["serve_attempts"].replace(0, np.nan)
+
+    # --- PASSING & DEFENSE ---
+    df["receptions_per_set"] = (df["receptions"] / sets).round(2)
+    df["playable_reception_ratio"] = ((df["receptions"] - df["reception_errors"]) / receptions).round(2)
+    df["digs_per_set"] = (df["successful_digs"] / sets).round(2)
+
+    # --- SETTING ---
+    df["assists_per_set"] = (df["assists"] / sets).round(2)
+
+    # --- OFFENSE ---
+    df["kills_per_set"] = (df["attack_kills"] / sets).round(2)
+    df["attack_efficiency"] = ((df["attack_kills"] - df["attack_errors"]) / attacks).round(2)
+
+    # --- SERVING ---
+    df["serve_aces_per_set"] = (df["serve_aces"] / sets).round(2)
+    df["serve_efficiency"] = ((df["serve_aces"] - df["serve_errors"]) / serves).round(2)
+
+    # --- BLOCKING ---
+    df["blocks_per_set"] = ((df["block_points"] + df["block_touches"]) / sets).round(2) 
+    df["block_kills_per_set"] = (df["block_points"] / sets).round(2) 
+    df["block_touches_per_set"] = (df["block_touches"] / sets).round(2)
+
+    return df
+
+
+def calculate_percentiles(df: pd.DataFrame, metrics: list) -> pd.DataFrame:
+    df = df.copy()
+    for metric in metrics:
+        if metric in df.columns:
+            df[f"{metric}_percentile"] = df[metric].rank(pct=True).round(3)
+    return df   
+
+
+def get_radar_data(player_df: pd.DataFrame, league_df: pd.DataFrame, position: int):
+    config = POSITION_METRICS[position]["radar"]
+    metrics = config["metrics"]
+    labels = config["labels"]
+
+    ranked_df = calculate_percentiles(league_df, metrics)
+    target_player_id = player_df.iloc[0]["player_id"]
+    player_row = ranked_df[ranked_df["player_id"] == target_player_id].iloc[0].fillna(0)
+
+    player_radar_percentiles = [player_row.get(f"{m}_percentile", 0) for m in metrics]
+    league_avg_percentiles = [0.5 for _ in metrics] 
+    
+    player_raw_stats = [player_row.get(m, 0) for m in metrics]
+    league_avg_stats = [league_df[m].mean().round(2) if m in league_df.columns else 0 for m in metrics]
+
+    return {
+        "labels": labels,
+        "player_radar_percentiles": player_radar_percentiles,
+        "league_avg_percentiles": league_avg_percentiles,
+        "player_raw_stats": player_raw_stats,
+        "league_avg_stats": league_avg_stats,
+    }
