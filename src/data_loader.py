@@ -1,9 +1,10 @@
 import duckdb
 import pandas as pd
+import plotly.graph_objects as go
 
 DB_PATH = "data/volleyball.duckdb"
 
-def get_player_by_position(position: int, league: str = "all"):
+def get_players_by_position(position: int, league: str = "all"):
     con = duckdb.connect(DB_PATH, read_only=True)
     league_filter = "" if league == "all" else f"AND league = '{league}'"
     query = f"""
