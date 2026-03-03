@@ -104,10 +104,20 @@ def get_position_stats(position: int, league: str = "all"):
     return df
 
 
-def get_top_performances(player_id: int, league: str = "all", top_n: int = 5):
+POSITION_SORT = {
+    1: "SUM(player_boxscores.successful_digs)",
+    2: "SUM(player_boxscores.attack_kills)",
+    3: "SUM(player_boxscores.attack_kills)",
+    4: "SUM(player_boxscores.block_points) + SUM(player_boxscores.block_touches)",
+    5: "SUM(player_boxscores.assists)",
+}
+
+def get_top_performances(player_id: int, position: int, league: str = "all", top_n: int = 5):
     con = duckdb.connect(DB_PATH, read_only=True)
     
+
     league_filter = "" if league == "all" else f"AND player_boxscores.league = '{league}'"
+    sort_expr = POSITION_SORT.get(position, "SUM(player_boxscores.attack_kills)")
     
     query = f"""
         SELECT
@@ -124,13 +134,6 @@ def get_top_performances(player_id: int, league: str = "all", top_n: int = 5):
             ROUND(SUM(player_boxscores.perfect_reception_ratio * player_boxscores.receptions)) AS "Perfect_Passes",
             ROUND(SUM(player_boxscores.positive_reception_ratio * player_boxscores.receptions) - 
                   SUM(player_boxscores.perfect_reception_ratio * player_boxscores.receptions)) AS "Positive_Passes",
-            (SUM(player_boxscores.attack_kills) + 
-             SUM(player_boxscores.assists) + 
-             SUM(player_boxscores.serve_aces) + 
-             SUM(player_boxscores.block_points) + 
-             SUM(player_boxscores.successful_digs) +
-             ROUND(SUM(player_boxscores.perfect_reception_ratio * player_boxscores.receptions)) +
-             ROUND(SUM(player_boxscores.positive_reception_ratio * player_boxscores.receptions))) AS "Total_Impact"
              
         FROM player_boxscores
         JOIN (SELECT DISTINCT player_name, league, TRY_CAST(player_id AS INT) AS player_id FROM player_info) pi
@@ -141,7 +144,7 @@ def get_top_performances(player_id: int, league: str = "all", top_n: int = 5):
         WHERE pi.player_id = {player_id}
         {league_filter}
         GROUP BY player_boxscores.match_id, schedule.date, schedule.home_team, schedule.away_team
-        ORDER BY "Total_Impact" DESC
+        ORDER BY {sort_expr} DESC
         LIMIT {top_n}
     """
     
