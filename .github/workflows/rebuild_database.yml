@@ -1,0 +1,33 @@
+name: Rebuild Database
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6am UTC
+  workflow_dispatch:  # Allows manual trigger from GitHub
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyvolleydata duckdb pandas boto3
+
+      - name: Rebuild database
+        run: python scripts/build_database.py
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp data/volleyball.duckdb s3://${{ secrets.S3_BUCKET }}/volleyball.duckdb
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
