@@ -1,0 +1,47 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 377876718152.dkr.ecr.us-east-1.amazonaws.com
+
+      - name: Build and push image
+        run: |
+          docker build -t volleyball-dashboard .
+          docker tag volleyball-dashboard:latest 377876718152.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
+          docker push 377876718152.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin 377876718152.dkr.ecr.us-east-1.amazonaws.com
+            sudo docker pull 377876718152.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
+            sudo docker stop volleyball || true
+            sudo docker rm volleyball || true
+            sudo docker run -d --name volleyball -p 80:8000 \
+              -e S3_BUCKET=volleyball-analytics-db \
+              -e AWS_DEFAULT_REGION=us-east-1 \
+              377876718152.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
