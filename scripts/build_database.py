@@ -1,5 +1,6 @@
 import duckdb
 import pandas as pd
+import os
 from pyvolleydata import get_data
 
 DB_PATH = "data/volleyball.duckdb"
@@ -12,6 +13,7 @@ LEAGUES = {
 
 
 def build_database():
+    os.makedirs("data", exist_ok=True)
     boxscores = pd.DataFrame()
     pbp = pd.DataFrame()
     events = pd.DataFrame()
