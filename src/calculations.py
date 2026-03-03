@@ -14,67 +14,92 @@ POSITION_METRICS = {
                         "digs_per_set", "assists", "assists_per_set"],
             "labels": ["Sets Played", "Pass RTG", "Total Digs", "Digs/Set",
                        "Total Assists", "Ast/Set"],
-        }
+        },
+        "top_performances": {
+            "cols":   ["Date", "Home", "Away", "Sets", "Digs", "Perfect_Passes", "Positive_Passes", "Assists", "Aces"],
+            "labels": ["Date", "Home", "Away", "Sets", "Digs", "Perf Pass", "Pos Pass", "Ast", "Aces"],
+            "widths": [100, 150, 150, 45, 55, 80, 80, 45, 50],
+    }
     },
     2: {  # Outside
         "radar": {
             "metrics": ["kills_per_set", "attack_efficiency", "positive_reception_ratio", 
                         "serve_efficiency", "digs_per_set", "blocks_per_set",],
-            "labels": ["Kills/Set", "Hit %", "Pos Pass %", "Serve Eff", "Digs/Set", "Blocks/Set"],
+            "labels": ["Kills/Set", "Hit Eff", "Pos Pass %", "Serve Eff", "Digs/Set", "Blocks/Set"],
         },
         "kpi": {
             "metrics": ["sets_played", "attack_kills", "kills_per_set", "attack_efficiency",
                         "pass_rating", "successful_digs", "digs_per_set", "total_blocks", 
                         "blocks_per_set", "serve_aces", "serve_aces_per_set", "serve_efficiency"],
-            "labels": ["Sets Played", "Total Kills", "Kills/Set", "Hit %", "Pass RTG", "Total Digs", 
+            "labels": ["Sets Played", "Total Kills", "Kills/Set", "Hit Eff", "Pass RTG", "Total Digs", 
                        "Digs/Set", "Total Blocks", "Blocks/Set", "Total Aces", "Aces/Set", "Serve Eff"],
-        }
+        },
+        "top_performances": {
+            "cols":   ["Date", "Home", "Away", "Sets", "Kills", "Aces", "Digs", "Block_Kills", "Perfect_Passes", "Positive_Passes"],
+            "labels": ["Date", "Home", "Away", "Sets", "Kills", "Aces", "Digs", "Blk K", "Perf Pass", "Pos Pass"],
+            "widths": [100, 150, 150, 45, 55, 50, 55, 55, 80, 80],
+    }
     },
     3: {  # Opposite
         "radar": {
             "metrics": ["kills_per_set", "attack_efficiency", "serve_aces_per_set",
                         "serve_efficiency", "digs_per_set", "blocks_per_set", ],
-            "labels": ["Kills/Set", "Hit %", "Aces/Set", 
+            "labels": ["Kills/Set", "Hit Eff", "Aces/Set", 
                         "Serve Eff", "Digs/Set", "Blocks/Set"],
         },
         "kpi": {
             "metrics": ["sets_played", "attack_kills", "kills_per_set", "attack_efficiency",
                         "successful_digs", "digs_per_set", "total_blocks", "blocks_per_set",
                         "serve_aces", "serve_aces_per_set", "serve_efficiency"],
-            "labels": ["Sets Played", "Total Kills", "Kills/Set", "Hit %", 
+            "labels": ["Sets Played", "Total Kills", "Kills/Set", "Hit Eff", 
                         "Total Digs", "Digs/Set", "Total Blocks", "Blocks/Set",
                         "Total Aces", "Aces/Set", "Serve Eff"],
-        }
+        },
+        "top_performances": {
+            "cols":   ["Date", "Home", "Away", "Sets", "Kills", "Aces", "Block_Kills", "Block_Touches", "Digs"],
+            "labels": ["Date", "Home", "Away", "Sets", "Kills", "Aces", "Blk K", "Blk T", "Digs"],
+            "widths": [100, 150, 150, 45, 55, 50, 55, 55, 55],
+    }
     },
     4: {  # Middle
         "radar": {
             "metrics": ["kills_per_set", "attack_efficiency", "serve_aces_per_set",
                         "serve_efficiency", "block_touches_per_set", "block_kills_per_set"],
-            "labels": ["Kills/Set", "Hit %", "Aces/Set", 
+            "labels": ["Kills/Set", "Hit Eff", "Aces/Set", 
                         "Serve Eff", "Block Touches/Set", "Block Kills/Set"],
         },
         "kpi": {
             "metrics": ["sets_played", "attack_kills", "kills_per_set", "attack_efficiency",
                         "total_blocks", "block_points", "block_touches", "blocks_per_set",
                         "serve_aces", "serve_aces_per_set", "serve_efficiency"],
-            "labels": ["Sets Played", "Total Kills", "Kills/Set", "Hit %", "Total Blocks", "Block Kills", 
+            "labels": ["Sets Played", "Total Kills", "Kills/Set", "Hit Eff", "Total Blocks", "Block Kills", 
                        "Block Touches", "Blocks/Set", "Total Aces", "Aces/Set", "Serve Eff"],
-        }
+        },
+        "top_performances": {
+            "cols":   ["Date", "Home", "Away", "Sets", "Kills", "Block_Kills", "Block_Touches", "Aces", "Digs"],
+            "labels": ["Date", "Home", "Away", "Sets", "Kills", "Blk K", "Blk T", "Aces", "Digs"],
+            "widths": [100, 150, 150, 45, 55, 55, 55, 50, 55],
+    }
     },
     5: {  # Setter
         "radar": {
             "metrics": ["assists_per_set", "kills_per_set", "attack_efficiency",
                         "serve_efficiency", "digs_per_set", "blocks_per_set"],
-            "labels": ["Ast/Set", "Kills/Set", "Hit %", 
+            "labels": ["Ast/Set", "Kills/Set", "Hit Eff", 
                         "Serve Eff", "Digs/Set", "Blocks/Set"],
         },
         "kpi": {
             "metrics": ["sets_played", "assists", "assists_per_set", "attack_kills", "kills_per_set", 
                         "attack_efficiency", "serve_aces", "serve_aces_per_set", "serve_efficiency",
                         "total_blocks", "blocks_per_set", "successful_digs", "digs_per_set"],
-            "labels": ["Sets Played", "Total Assists", "Ast/Set", "Total Kills", "Kills/Set", "Hit %", "Total Aces", 
+            "labels": ["Sets Played", "Total Assists", "Ast/Set", "Total Kills", "Kills/Set", "Hit Eff", "Total Aces", 
                        "Aces/Set", "Serve Eff", "Total Blocks", "Blocks/Set", "Total Digs", "Digs/Set"],
-        }
+        },
+        "top_performances": {
+            "cols":   ["Date", "Home", "Away", "Sets", "Assists", "Kills", "Aces", "Block_Kills", "Digs"],
+            "labels": ["Date", "Home", "Away", "Sets", "Ast", "Kills", "Aces", "Blk K", "Digs"],
+            "widths": [100, 150, 150, 45, 55, 55, 50, 55, 55],
+    }
     },
 }
 
@@ -132,11 +157,13 @@ def get_radar_data(player_df: pd.DataFrame, league_df: pd.DataFrame, position: i
 
     ranked_df = calculate_percentiles(league_df, metrics)
     target_player_id = player_df.iloc[0]["player_id"]
-    player_row = ranked_df[ranked_df["player_id"] == target_player_id].iloc[0].fillna(0)
+    matches = ranked_df[ranked_df["player_id"] == target_player_id]
+    if matches.empty:
+        return {}
+    player_row = matches.iloc[0].fillna(0)
 
     player_radar_percentiles = [player_row.get(f"{m}_percentile", 0) for m in metrics]
     league_avg_percentiles = [0.5 for _ in metrics] 
-    
     player_raw_stats = [player_row.get(m, 0) for m in metrics]
     league_avg_stats = [league_df[m].mean().round(2) if m in league_df.columns else 0 for m in metrics]
 
@@ -156,10 +183,12 @@ def get_kpi_data(player_df: pd.DataFrame, league_df: pd.DataFrame, position: int
 
     ranked_df = calculate_percentiles(league_df, metrics)
     target_player_id = player_df.iloc[0]["player_id"]
-    player_row = ranked_df[ranked_df["player_id"] == target_player_id].iloc[0].fillna(0)
+    matches = ranked_df[ranked_df["player_id"] == target_player_id]
+    if matches.empty:
+        return []
+    player_row = matches.iloc[0].fillna(0)
 
     kpi_cards = []
-    
     for i, metric in enumerate(metrics):
         player_val = player_row.get(metric, 0)
         league_avg = league_df[metric].mean() if metric in league_df.columns else 0
