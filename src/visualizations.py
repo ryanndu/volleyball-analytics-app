@@ -142,7 +142,7 @@ def build_scatter_plot(position_stats: pd.DataFrame, player_name: str, position:
         plot_bgcolor="#0d1117",
         height=380,
         showlegend=False,
-        margin=dict(l=50, r=20, t=50, b=50),
+        margin=dict(l=50, r=60, t=50, b=50),
         title=dict(
             text="POSITIONAL COMPARISON",
             font=dict(color="#8b949e", size=11, ),
@@ -154,6 +154,7 @@ def build_scatter_plot(position_stats: pd.DataFrame, player_name: str, position:
             gridcolor="#21262d",
             zerolinecolor="#21262d",
             tickfont=dict(color="#8b949e", size=10),
+            automargin=True,
         ),
         yaxis=dict(
             title=dict(text=y_label, font=dict(color="#8b949e", size=11)),
@@ -167,22 +168,24 @@ def build_scatter_plot(position_stats: pd.DataFrame, player_name: str, position:
     return fig
 
 
-def build_top_performances_table(df: pd.DataFrame) -> go.Figure:
+def build_top_performances_table(df: pd.DataFrame, position: int) -> go.Figure:
+    from src.calculations import POSITION_METRICS
     fig = go.Figure()
 
     if df.empty:
         fig.update_layout(paper_bgcolor="#0d1117", height=200)
         return fig
 
+    config = POSITION_METRICS[position]["top_performances"]
+    col_keys   = config["cols"]
+    col_labels = config["labels"]
+    col_widths = config["widths"]
+
     df = df.copy()
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.strftime("%b %d, %Y")
+    numeric_cols = df.select_dtypes(include="number").columns
+    df[numeric_cols] = df[numeric_cols].fillna(0)
 
-    col_labels  = ["Date", "Home", "Away", "Sets", "Kills", "Ast", "Aces", "Blk K", "Blk T", "Digs", "Perf Pass", "Pos Pass"]
-    col_keys    = ["Date", "Home", "Away", "Sets", "Kills", "Assists", "Aces", "Block_Kills", "Block_Touches", "Digs", "Perfect_Passes", "Positive_Passes"]
-    col_widths  = [90, 130, 130, 45, 50, 45, 50, 55, 55, 50, 75, 75]
-
-    header_colors = ["#1c2128"] * len(col_labels)
-    
     cell_values = [df[k].tolist() if k in df.columns else ["—"] * len(df) for k in col_keys]
 
     fig.add_trace(go.Table(
@@ -207,15 +210,9 @@ def build_top_performances_table(df: pd.DataFrame) -> go.Figure:
 
     fig.update_layout(
         paper_bgcolor="#0d1117",
-        plot_bgcolor="#0d1117",
         height=260,
         margin=dict(l=0, r=0, t=40, b=0),
-        title=dict(
-            text="TOP PERFORMANCES",
-            font=dict(color="#8b949e", size=11),
-            x=0.01,
-            y=0.97
-        )
+        title=dict(text="TOP PERFORMANCES", font=dict(color="#8b949e", size=11), x=0.01, y=0.97)
     )
     fig._config = {"staticPlot": True, "displayModeBar": False}
     return fig
