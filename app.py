@@ -78,7 +78,7 @@ app_ui = ui.page_navbar(
 
                 # KPI cards row
                 ui.div(
-                    ui.p("SEASON STATS", style="color: #8b949e; font-size: 10px; font-weight: 600; letter-spacing: 1px; margin-bottom: 10px;"),
+                    ui.p("OVERALL STATS", style="color: #8b949e; font-size: 10px; font-weight: 600; letter-spacing: 1px; margin-bottom: 10px;"),
                     ui.output_ui("kpi_cards"),
                 ),
                 ui.div(style="height: 16px;"),
@@ -239,6 +239,8 @@ def server(input, output, session):
             return go.Figure().update_layout(paper_bgcolor="#161b22", plot_bgcolor="#161b22", height=380)
         position_id = POSITIONS[input.position()]
         radar = get_radar_data(p_stats, pos_stats, position_id)
+        if not radar:
+            return go.Figure().update_layout(paper_bgcolor="#0d1117", height=380)
         return build_radar_chart(radar, selected_player_name())
 
     @output
@@ -254,11 +256,11 @@ def server(input, output, session):
     def top_performances():
         pid = input.primary_player()
         if not pid:
-            return go.Figure().update_layout(paper_bgcolor="#161b22", plot_bgcolor="#161b22", height=220)
+            return go.Figure().update_layout(paper_bgcolor="#0d1117", height=220)
         league = LEAGUES[input.league()]
-        df = get_top_performances(int(pid), league)
-        from src.visualizations import build_top_performances_table
-        return build_top_performances_table(df)
+        position_id = POSITIONS[input.position()]
+        df = get_top_performances(int(pid), position_id, league)
+        return build_top_performances_table(df, position_id)
 
 
 app = App(app_ui, server)
