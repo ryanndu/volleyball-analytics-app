@@ -1,11 +1,38 @@
 import duckdb
 import pandas as pd
-import plotly.graph_objects as go
+import functools
+import hashlib
+import time
 
 DB_PATH = "data/volleyball.duckdb"
+_connection: duckdb.DuckDBPyConnection | None = None
 
-def get_players_by_position(position: int, league: str = "all"):
-    con = duckdb.connect(DB_PATH, read_only=True)
+
+def _get_connection() -> duckdb.DuckDBPyConnection:
+    global _connection
+    if _connection is None:
+        _connection = duckdb.connect(DB_PATH, read_only=True)
+    return _connection
+
+
+_cache: dict[str, tuple[float, pd.DataFrame]] = {}
+_CACHE_TTL = 300  # seconds
+
+
+def _cached_query(query: str, ttl: float = _CACHE_TTL) -> pd.DataFrame:
+    key = hashlib.md5(query.encode()).hexdigest()
+    now = time.time()
+    if key in _cache:
+        ts, df = _cache[key]
+        if now - ts < ttl:
+            return df.copy()
+    con = _get_connection()
+    df = con.execute(query).df()
+    _cache[key] = (now, df)
+    return df.copy()
+
+
+def get_players_by_position(position: int, league: str = "all") -> pd.DataFrame:
     league_filter = "" if league == "all" else f"AND league = '{league}'"
     query = f"""
         SELECT
@@ -23,14 +50,10 @@ def get_players_by_position(position: int, league: str = "all"):
         GROUP BY player_id, primary_position, league
         ORDER BY player_name
     """
-
-    df = con.execute(query).df()
-    con.close()
-    return df
+    return _cached_query(query)
 
 
-def get_player_stats(player_id: int, league: str = "all"):
-    con = duckdb.connect(DB_PATH, read_only=True)
+def get_player_stats(player_id: int, league: str = "all") -> pd.DataFrame:
     league_filter = "" if league == "all" else f"AND player_boxscores.league = '{league}'"
     query = f"""
         SELECT
@@ -54,20 +77,20 @@ def get_player_stats(player_id: int, league: str = "all"):
             SUM(assists) AS assists,
             SUM(successful_digs) AS successful_digs
         FROM player_boxscores
-        JOIN (SELECT DISTINCT player_name, league, TRY_CAST(player_id AS INT) AS player_id FROM player_info) pi
+        JOIN (
+            SELECT DISTINCT player_name, league, TRY_CAST(player_id AS INT) AS player_id
+            FROM player_info
+        ) pi
             ON player_boxscores.player_name = pi.player_name
             AND player_boxscores.league = pi.league
         WHERE pi.player_id = {player_id}
         {league_filter}
         GROUP BY player_id, player_boxscores.league
     """
-    df = con.execute(query).df()
-    con.close()
-    return df
+    return _cached_query(query)
 
 
-def get_position_stats(position: int, league: str = "all"):
-    con = duckdb.connect(DB_PATH, read_only=True)
+def get_position_stats(position: int, league: str = "all") -> pd.DataFrame:
     league_filter = "" if league == "all" else f"AND player_boxscores.league = '{league}'"
     query = f"""
         SELECT
@@ -91,7 +114,10 @@ def get_position_stats(position: int, league: str = "all"):
             SUM(assists) AS assists,
             SUM(successful_digs) AS successful_digs
         FROM player_boxscores
-        JOIN (SELECT DISTINCT player_name, league, primary_position, TRY_CAST(player_id AS INT) AS player_id FROM player_info) pi
+        JOIN (
+            SELECT DISTINCT player_name, league, primary_position, TRY_CAST(player_id AS INT) AS player_id 
+            FROM player_info
+        ) pi
             ON player_boxscores.player_name = pi.player_name
             AND player_boxscores.league = pi.league
         WHERE pi.primary_position = {position}
@@ -99,9 +125,7 @@ def get_position_stats(position: int, league: str = "all"):
         GROUP BY pi.player_id, player_boxscores.league
         ORDER BY player_name
     """
-    df = con.execute(query).df()
-    con.close()
-    return df
+    return _cached_query(query)
 
 
 POSITION_SORT = {
@@ -112,10 +136,7 @@ POSITION_SORT = {
     5: "SUM(player_boxscores.assists)",
 }
 
-def get_top_performances(player_id: int, position: int, league: str = "all", top_n: int = 5):
-    con = duckdb.connect(DB_PATH, read_only=True)
-    
-
+def get_top_performances(player_id: int, position: int, league: str = "all", top_n: int = 5):    
     league_filter = "" if league == "all" else f"AND player_boxscores.league = '{league}'"
     sort_expr = POSITION_SORT.get(position, "SUM(player_boxscores.attack_kills)")
     
@@ -133,14 +154,13 @@ def get_top_performances(player_id: int, position: int, league: str = "all", top
             SUM(player_boxscores.successful_digs) AS "Digs",
             ROUND(SUM(player_boxscores.perfect_reception_ratio * player_boxscores.receptions)) AS "Perfect_Passes",
             ROUND(SUM(player_boxscores.positive_reception_ratio * player_boxscores.receptions) - 
-                  SUM(player_boxscores.perfect_reception_ratio * player_boxscores.receptions)) AS "Positive_Passes",
-             
+                  SUM(player_boxscores.perfect_reception_ratio * player_boxscores.receptions)) AS "Positive_Passes"
         FROM player_boxscores
         JOIN (SELECT DISTINCT player_name, league, TRY_CAST(player_id AS INT) AS player_id FROM player_info) pi
             ON player_boxscores.player_name = pi.player_name
             AND player_boxscores.league = pi.league
-        JOIN schedule
-            ON player_boxscores.match_id = schedule.match_id
+        LEFT JOIN schedule
+            ON TRY_CAST(player_boxscores.match_id AS BIGINT) = TRY_CAST(schedule.match_id AS BIGINT)
         WHERE pi.player_id = {player_id}
         {league_filter}
         GROUP BY player_boxscores.match_id, schedule.date, schedule.home_team, schedule.away_team
@@ -148,10 +168,9 @@ def get_top_performances(player_id: int, position: int, league: str = "all", top
         LIMIT {top_n}
     """
     
-    df = con.execute(query).df()
-    con.close()
+    df = _cached_query(query)
     
     if "Date" in df.columns:
-        df["Date"] = pd.to_datetime(df["Date"]).dt.strftime('%Y-%m-%d')
-        
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.strftime('%b %d, %Y')
+
     return df
