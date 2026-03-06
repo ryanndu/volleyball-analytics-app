@@ -22,13 +22,13 @@ jobs:
 
       - name: Login to ECR
         run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 377876718152.dkr.ecr.us-east-1.amazonaws.com
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
 
       - name: Build and push image
         run: |
           docker build -t volleyball-dashboard .
-          docker tag volleyball-dashboard:latest 377876718152.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
-          docker push 377876718152.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
+          docker tag volleyball-dashboard:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1
@@ -37,11 +37,12 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin 377876718152.dkr.ecr.us-east-1.amazonaws.com
-            sudo docker pull 377876718152.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
+            aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+            sudo docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
             sudo docker stop volleyball || true
             sudo docker rm volleyball || true
             sudo docker run -d --name volleyball -p 8000:8000 \
-              -e S3_BUCKET=volleyball-analytics-db \
+              -e S3_BUCKET=${{ secrets.S3_BUCKET }} \
               -e AWS_DEFAULT_REGION=us-east-1 \
-              377876718152.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
+              ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/volleyball-dashboard:latest
