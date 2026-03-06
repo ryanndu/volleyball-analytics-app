@@ -116,10 +116,10 @@ def add_derived_stats(df : pd.DataFrame):
     df["playable_reception_ratio"] = ((df["receptions"] - df["reception_errors"]) / receptions).round(2)
     df["digs_per_set"] = (df["successful_digs"] / sets).round(2)
     
-    pefect_receptions = (df["perfect_reception_ratio"] * df["receptions"]).round()
-    positive_receptions = (df["positive_reception_ratio"] * df["receptions"] - pefect_receptions).round()
-    poor_receptions = (df["receptions"] - positive_receptions - pefect_receptions - df["reception_errors"]).round()
-    df["pass_rating"] = ((3 * pefect_receptions + 2 * positive_receptions + poor_receptions) / df["receptions"]).round(2)
+    perfect_receptions = (df["perfect_reception_ratio"] * df["receptions"]).round()
+    positive_receptions = (df["positive_reception_ratio"] * df["receptions"] - perfect_receptions).round()
+    poor_receptions = (df["receptions"] - positive_receptions - perfect_receptions - df["reception_errors"]).round()
+    df["pass_rating"] = ((3 * perfect_receptions + 2 * positive_receptions + poor_receptions) / df["receptions"]).round(2)
     
 
     # --- SETTING ---
